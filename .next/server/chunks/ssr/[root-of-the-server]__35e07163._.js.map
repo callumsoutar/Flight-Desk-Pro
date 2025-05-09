@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 15, "column": 0}, "map": {"version":3,"sources":["file:///Users/callumsoutar/flightdeskpro/src/app/providers.tsx"],"sourcesContent":["\"use client\";\nimport { QueryClient, QueryClientProvider } from '@tanstack/react-query';\nimport { useState } from 'react';\nimport type { ReactNode } from 'react';\n\nexport function Providers({ children }: { children: ReactNode }) {\n  const [queryClient] = useState(() => new QueryClient());\n  return (\n    <QueryClientProvider client={queryClient}>\n      {children}\n    </QueryClientProvider>\n  );\n} "],"names":[],"mappings":";;;;AACA;AAAA;AACA;AAFA;;;;AAKO,SAAS,UAAU,EAAE,QAAQ,EAA2B;IAC7D,MAAM,CAAC,YAAY,GAAG,CAAA,GAAA,qMAAA,CAAA,WAAQ,AAAD,EAAE,IAAM,IAAI,2KAAA,CAAA,cAAW;IACpD,qBACE,8OAAC,oLAAA,CAAA,sBAAmB;QAAC,QAAQ;kBAC1B;;;;;;AAGP","debugId":null}}]
+}

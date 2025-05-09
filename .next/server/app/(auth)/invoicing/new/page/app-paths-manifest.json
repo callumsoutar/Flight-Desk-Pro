@@ -1,0 +1,3 @@
+{
+  "/(auth)/invoicing/new/page": "app/(auth)/invoicing/new/page.js"
+}
