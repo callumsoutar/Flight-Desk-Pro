@@ -75,9 +75,6 @@
 }
 
 @layer base {
-  * {
-    @apply border border-gray-200 outline outline-2 outline-[color:var(--ring)] outline-offset-2;
-  }
   body {
     @apply [background:var(--background)] [color:var(--foreground)];
   }
