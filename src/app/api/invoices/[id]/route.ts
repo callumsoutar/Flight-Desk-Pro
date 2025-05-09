@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabaseServerClient";
 import { z } from "zod";
 
-export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
-  const { id } = await context.params;
+export async function PATCH(req: NextRequest) {
+  const url = new URL(req.url);
+  const id = url.pathname.split("/").pop();
   const supabase = await createClient();
   const body = await req.json();
 

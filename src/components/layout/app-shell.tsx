@@ -133,12 +133,6 @@ export default function AppShell({
   // Filter navigation options based on user role
   const visibleNavOptions = mainNavOptions.filter(option => {
     const hasAccess = canAccessTab(option.tab, userRole);
-    console.log('[DEBUG] Nav access check:', {
-      tab: option.tab,
-      role: userRole,
-      hasAccess,
-      allowedRoles: TAB_ROLE_ACCESS[option.tab]
-    });
     return hasAccess;
   });
 
