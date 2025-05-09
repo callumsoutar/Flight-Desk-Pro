@@ -95,10 +95,16 @@ export default function BookingsPage() {
           start_time: b.start_time,
           end_time: b.end_time,
           status: b.status,
-          member: b.users && b.users.length > 0 ? b.users[0] : null,
-          instructor: b.instructor && b.instructor.length > 0 ? b.instructor[0] : null,
+          member: Array.isArray(b.users)
+            ? (b.users.length > 0 ? b.users[0] : null)
+            : (b.users ? b.users : null),
+          instructor: Array.isArray(b.instructor)
+            ? (b.instructor.length > 0 ? b.instructor[0] : null)
+            : (b.instructor ? b.instructor : null),
           purpose: b.purpose,
-          aircraft: b.aircraft && b.aircraft.length > 0 ? b.aircraft[0] : null,
+          aircraft: Array.isArray(b.aircraft)
+            ? (b.aircraft.length > 0 ? b.aircraft[0] : null)
+            : (b.aircraft ? b.aircraft : null),
         }));
         setBookings(rows);
         setLoading(false);

@@ -6,6 +6,7 @@ import { PeopleCard } from '@/components/bookings/people-card';
 import React from 'react';
 import { LogOut, LogIn } from 'lucide-react';
 import Link from 'next/link';
+import { AuditLogsTable } from '@/components/audit-logs/audit-logs-table';
 
 const STAGES = [
   { key: 'briefing', label: 'Briefing' },
@@ -53,7 +54,7 @@ export default async function BookingViewPage(context: { params: Promise<{ id: s
       <div className="w-full max-w-6xl px-4 pt-8 pb-12 flex flex-col gap-8">
         <div className="flex items-center justify-between pb-2 gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
               Booking Details
               <StatusBadge status={booking.status} />
             </h1>
@@ -62,7 +63,7 @@ export default async function BookingViewPage(context: { params: Promise<{ id: s
             {booking.status === 'flying' && (
               <Link href={`/bookings/check-in/${booking.id}`}>
                 <button
-                  className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 px-5 py-2 rounded-lg font-semibold shadow"
+                  className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 px-5 py-2 rounded-lg font-semibold shadow cursor-pointer"
                   type="button"
                 >
                   <LogIn className="w-4 h-4 mr-1" />
@@ -73,7 +74,7 @@ export default async function BookingViewPage(context: { params: Promise<{ id: s
             {booking.status !== 'flying' && (
               <Link href={`/bookings/check-out/${booking.id}`}>
                 <button
-                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-5 py-2 rounded-lg font-semibold shadow"
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-5 py-2 rounded-lg font-semibold shadow cursor-pointer"
                   type="button"
                 >
                   <LogOut className="w-4 h-4 mr-1" />
@@ -97,6 +98,10 @@ export default async function BookingViewPage(context: { params: Promise<{ id: s
           <div className="md:col-span-1 flex flex-col gap-6">
             {booking.member && <PeopleCard member={booking.member} instructor={booking.instructor} />}
           </div>
+        </div>
+        {/* Audit Log Table */}
+        <div className="mt-8">
+          <AuditLogsTable rowId={booking.id} tableName="bookings" />
         </div>
       </div>
     </div>

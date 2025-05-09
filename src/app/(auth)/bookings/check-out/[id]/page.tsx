@@ -4,6 +4,7 @@ import { CheckOutDetailsCard } from '@/components/bookings/check-out-details-car
 import { BookingStages } from '@/components/bookings/booking-stages';
 import { PeopleCard } from '@/components/bookings/people-card';
 import React from 'react';
+import { AuditLogsTable } from '@/components/audit-logs/audit-logs-table';
 
 const STAGES = [
   { key: 'briefing', label: 'Briefing' },
@@ -47,7 +48,7 @@ export default async function BookingCheckOutPage(context: { params: Promise<{ i
   }
 
   return (
-    <div className="w-full min-h-screen bg-white flex flex-col items-center">
+    <div className="w-full min-h-screen flex flex-col items-center bg-gradient-to-br from-blue-50 via-white to-blue-100">
       <div className="w-full max-w-6xl px-4 pt-8 pb-12 flex flex-col gap-8">
         {/* Title, Status, and Stages */}
         <div className="flex flex-col gap-1 mb-2">
@@ -68,12 +69,18 @@ export default async function BookingCheckOutPage(context: { params: Promise<{ i
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start mt-8">
           {/* Left: Booking Details */}
           <div className="md:col-span-2 flex flex-col gap-6">
-            <CheckOutDetailsCard booking={booking} editMode={true} />
+            <div className="border-2 border-blue-200 rounded-xl shadow-lg bg-white">
+              <CheckOutDetailsCard booking={booking} editMode={true} />
+            </div>
           </div>
           {/* Right: People */}
           <div className="md:col-span-1 flex flex-col gap-6">
             {booking.member && <PeopleCard member={booking.member} instructor={booking.instructor} />}
           </div>
+        </div>
+        {/* Audit Log Table */}
+        <div className="mt-8">
+          <AuditLogsTable rowId={booking.id} tableName="bookings" />
         </div>
       </div>
     </div>
