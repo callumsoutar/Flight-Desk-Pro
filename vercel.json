@@ -1,7 +1,3 @@
 {
-    "functions": {
-      "api/**.js": {
-        "regions": ["syd1"]
-      }
-    }
+    "regions": ["syd1"]
   }
