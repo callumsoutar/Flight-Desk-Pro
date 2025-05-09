@@ -23,8 +23,8 @@ import {
 function getErrorMessage(error: unknown): string {
   if (typeof error === 'string') return error;
   if (error instanceof Error) return error.message;
-  if (error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string') {
-    return (error as any).message;
+  if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: string }).message === 'string') {
+    return (error as { message: string }).message;
   }
   return 'Could not load rate';
 }
@@ -50,12 +50,10 @@ export function BookingCheckInCard({ booking, onSuccess, onCalculateCharges }: {
 
   // Fetch flight type and rate
   const supabase = createClient();
-  const [showCharges, setShowCharges] = useState(false);
   const {
     data: rateData,
     isLoading: rateLoading,
     error: rateError,
-    refetch: refetchRate
   } = useQuery({
     queryKey: ['aircraft_charge_rate', booking.aircraft_id, booking.flight_type_id],
     queryFn: async () => {
@@ -108,10 +106,13 @@ export function BookingCheckInCard({ booking, onSuccess, onCalculateCharges }: {
         .eq('organization_id', booking.organization_id);
       if (ratesErr) throw ratesErr;
       // 3. Merge: Only include users who have a rate
-      const merged = (orgUsers || [])
-        .map((row: any) => {
-          const user = row.users;
-          const rate = (ratesRows || []).find((r: any) => r.user_id === row.user_id)?.rate ?? null;
+      type OrgUser = { user_id: string; users: { first_name?: string; last_name?: string; email: string } };
+      const merged = ((orgUsers ?? []) as unknown as OrgUser[])
+        .map((row) => {
+          // Defensive: if users is an array, take the first element; otherwise use as object
+          const user = Array.isArray(row.users) ? row.users[0] : row.users;
+          if (!user || !user.email) return null;
+          const rate = (ratesRows as { user_id: string; rate: number | null }[]).find((r) => r.user_id === row.user_id)?.rate ?? null;
           return {
             id: row.user_id,
             name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email,
@@ -119,7 +120,7 @@ export function BookingCheckInCard({ booking, onSuccess, onCalculateCharges }: {
             rate,
           };
         })
-        .filter((u: any) => u.rate !== null && u.rate !== undefined);
+        .filter((u): u is { id: string; name: string; email: string; rate: number | null } => !!u && u.rate !== null && u.rate !== undefined);
       // Debug: log merged instructors
       console.log('Merged instructors with rates:', merged);
       return merged;
@@ -131,7 +132,9 @@ export function BookingCheckInCard({ booking, onSuccess, onCalculateCharges }: {
   console.log('instructors:', instructors);
   console.log('selectedInstructor:', selectedInstructor);
   if (instructors && selectedInstructor) {
-    const found = instructors.find((i: any) => i.id === selectedInstructor);
+    const found = Array.isArray(instructors)
+      ? (instructors as { id: string; name: string; rate: number | null }[]).find((i) => i.id === selectedInstructor)
+      : undefined;
     console.log('Found instructor:', found);
   }
 
@@ -162,16 +165,16 @@ export function BookingCheckInCard({ booking, onSuccess, onCalculateCharges }: {
   // Set default selected charge rate to booking.flight_type_id if present
   useEffect(() => {
     if (!selectedChargeRateId && chargeRates && booking.flight_type_id) {
-      const found = chargeRates.find((r: any) => r.flight_type_id === booking.flight_type_id);
+      const found = chargeRates.find((r: { flight_type_id: string }) => r.flight_type_id === booking.flight_type_id);
       if (found) setSelectedChargeRateId(found.id);
     }
   }, [chargeRates, booking.flight_type_id, selectedChargeRateId]);
 
   // Find the selected charge rate object
-  const selectedChargeRate = chargeRates?.find((r: any) => r.id === selectedChargeRateId) ?? null;
+  const selectedChargeRate = chargeRates?.find((r: { id: string }) => r.id === selectedChargeRateId) ?? null;
 
   // Fetch the default briefing chargeable for the org
-  const { data: briefingChargeable, isLoading: briefingLoading, error: briefingError } = useQuery({
+  const { data: briefingChargeable } = useQuery({
     queryKey: ['default_briefing_chargeable', booking.organization_id],
     queryFn: async () => {
       if (!booking.organization_id) return null;
@@ -213,17 +216,13 @@ export function BookingCheckInCard({ booking, onSuccess, onCalculateCharges }: {
     if (!selectedChargeRate || !instructors) return;
     // Determine which meter to use for aircraft charge
     let flightTime = 0;
-    let meterLabel = '';
     if (selectedChargeRate.charge_hobbs) {
       flightTime = hobbsTime;
-      meterLabel = 'Hobbs';
     } else if (selectedChargeRate.charge_tacho) {
       flightTime = tachoTime;
-      meterLabel = 'Tacho';
     } else {
       // Default fallback (could add airswitch logic here)
       flightTime = hobbsTime;
-      meterLabel = 'Hobbs';
     }
     // Get aircraft registration
     const aircraftReg = booking.aircraft?.registration || 'Unknown';
@@ -236,7 +235,7 @@ export function BookingCheckInCard({ booking, onSuccess, onCalculateCharges }: {
     // Instructor charge (if selected)
     let instructorCharge = null;
     if (selectedInstructor) {
-      const found = instructors.find((i: any) => i.id === selectedInstructor);
+      const found = instructors.find((i: { id: string; name: string; rate: number | null }) => i.id === selectedInstructor);
       if (found && found.rate !== null && found.rate !== undefined) {
         instructorCharge = {
           description: `Instructor - ${found.name}`,
@@ -246,7 +245,7 @@ export function BookingCheckInCard({ booking, onSuccess, onCalculateCharges }: {
         };
       }
     }
-    let items = instructorCharge ? [aircraftCharge, instructorCharge] : [aircraftCharge];
+    const items = instructorCharge ? [aircraftCharge, instructorCharge] : [aircraftCharge];
     // Add default briefing line item if briefing_completed is true and chargeable found
     if (booking.briefing_completed && briefingChargeable) {
       items.push({
@@ -291,9 +290,9 @@ export function BookingCheckInCard({ booking, onSuccess, onCalculateCharges }: {
             <SelectValue placeholder="Select flight type..." />
           </SelectTrigger>
           <SelectContent>
-            {chargeRates && chargeRates.map((rate: any) => (
-              <SelectItem key={rate.id} value={rate.id}>
-                {rate.flight_types?.name || 'Unknown'} - ${Number(rate.rate_per_hour * 1.15).toFixed(2)} / hour
+            {chargeRates && (chargeRates as { id: string; flight_types?: { name?: string }; rate_per_hour: number }[]).map((typedRate) => (
+              <SelectItem key={typedRate.id} value={typedRate.id}>
+                {typedRate.flight_types?.name || 'Unknown'} - ${Number(typedRate.rate_per_hour * 1.15).toFixed(2)} / hour
               </SelectItem>
             ))}
           </SelectContent>
@@ -313,9 +312,9 @@ export function BookingCheckInCard({ booking, onSuccess, onCalculateCharges }: {
             <SelectValue placeholder="Select instructor..." />
           </SelectTrigger>
           <SelectContent>
-            {instructors && instructors.map((inst: any) => (
+            {instructors && (instructors as { id: string; name: string; rate: number | null }[]).map((inst) => (
               <SelectItem key={inst.id} value={inst.id}>
-                {inst.name} - ${Number(inst.rate * 1.15).toFixed(2)} / hour
+                {inst.name} - {inst.rate !== null ? `$${Number(inst.rate * 1.15).toFixed(2)} / hour` : 'No rate'}
               </SelectItem>
             ))}
           </SelectContent>

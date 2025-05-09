@@ -3,10 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Phone, MapPin, Plane, FileText, Clock, CreditCard, CalendarRange, Book, History, Award, Settings, CheckCircle2, XCircle } from "lucide-react";
+import { Mail, Phone, Plane, CreditCard, CalendarRange, Book, History, Award, Settings } from "lucide-react";
 import type { Member } from "@/types/members";
-import { format, isWithinInterval } from "date-fns";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { format } from "date-fns";
 import { createClient } from "@/lib/supabaseBrowserClient";
 import { UserRole, canAccessTab } from "@/lib/permissions";
 import { Alert } from "@/components/ui/alert";
@@ -124,7 +123,7 @@ export function MemberTabs({ member }: MemberTabsProps) {
   if (!userRole) {
     return (
       <Alert variant="destructive">
-        <p>You don't have permission to view this member&apos;s details</p>
+        <p>You don&apos;t have permission to view this member&apos;s details</p>
       </Alert>
     );
   }

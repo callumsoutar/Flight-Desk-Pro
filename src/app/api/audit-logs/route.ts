@@ -51,14 +51,24 @@ export async function GET(req: NextRequest) {
   // Collect all userIds, aircraftIds, instructorIds to resolve in batch
   const userIds = Array.from(new Set(data.map((log: Record<string, unknown>) => log.changed_by).filter(Boolean)));
   const aircraftIds = Array.from(new Set(
-    data.flatMap((log: Record<string, any>) =>
-      log.column_changes ? [log.column_changes.aircraft_id?.old, log.column_changes.aircraft_id?.new] : []
-    ).filter(Boolean)
+    data.flatMap((log: Record<string, unknown>) => {
+      const changes = log.column_changes as Record<string, unknown> | undefined;
+      if (changes && typeof changes === 'object' && 'aircraft_id' in changes) {
+        const aircraftChange = changes['aircraft_id'] as { old?: string; new?: string };
+        return [aircraftChange?.old, aircraftChange?.new];
+      }
+      return [];
+    }).filter(Boolean)
   ));
   const instructorIds = Array.from(new Set(
-    data.flatMap((log: Record<string, any>) =>
-      log.column_changes ? [log.column_changes.instructor_id?.old, log.column_changes.instructor_id?.new] : []
-    ).filter(Boolean)
+    data.flatMap((log: Record<string, unknown>) => {
+      const changes = log.column_changes as Record<string, unknown> | undefined;
+      if (changes && typeof changes === 'object' && 'instructor_id' in changes) {
+        const instructorChange = changes['instructor_id'] as { old?: string; new?: string };
+        return [instructorChange?.old, instructorChange?.new];
+      }
+      return [];
+    }).filter(Boolean)
   ));
 
   // Batch fetch users and aircraft
@@ -73,15 +83,15 @@ export async function GET(req: NextRequest) {
       ? supabase.from('users').select('id, first_name, last_name').in('id', instructorIds)
       : Promise.resolve({ data: [] }),
   ]);
-  const userMap = Object.fromEntries((usersRes.data || []).map((u: Record<string, any>) => [u.id, `${u.first_name || ''} ${u.last_name || ''}`.trim()]));
-  const aircraftMap = Object.fromEntries((aircraftRes.data || []).map((a: Record<string, any>) => [a.id, a.registration]));
-  const instructorMap = Object.fromEntries((instructorsRes.data || []).map((u: Record<string, any>) => [u.id, `${u.first_name || ''} ${u.last_name || ''}`.trim()]));
+  const userMap = Object.fromEntries((usersRes.data || []).map((u: Record<string, unknown>) => [u.id, `${u.first_name || ''} ${u.last_name || ''}`.trim()]));
+  const aircraftMap = Object.fromEntries((aircraftRes.data || []).map((a: Record<string, unknown>) => [a.id, a.registration]));
+  const instructorMap = Object.fromEntries((instructorsRes.data || []).map((u: Record<string, unknown>) => [u.id, `${u.first_name || ''} ${u.last_name || ''}`.trim()]));
 
   // Build user-friendly messages
   const logs = await Promise.all(
-    data.map(async (log: Record<string, any>) => {
-      const user = userMap[log.changed_by] || 'Someone';
-      const date = formatAuditDate(log.changed_at);
+    data.map(async (log: Record<string, unknown>) => {
+      const user = userMap[String(log.changed_by)] || 'Someone';
+      const date = formatAuditDate(String(log.changed_at));
       const descriptions: string[] = [];
       if (log.column_changes) {
         for (const [field, value] of Object.entries(log.column_changes)) {

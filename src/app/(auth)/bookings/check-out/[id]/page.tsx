@@ -14,7 +14,6 @@ export default async function BookingCheckOutPage(context: { params: Promise<{ i
     <ClientBookingView
       booking={booking}
       title={booking.status === 'flying' ? 'Booking Details' : 'Check Flight Out'}
-      detailsCardComponent={<CheckOutDetailsCard booking={booking} editMode={true} />}
     />
   );
 } 

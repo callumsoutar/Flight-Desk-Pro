@@ -26,7 +26,6 @@ export function TabsInline({ tabs, value, onChange, children }: TabsInlineProps)
                 : 'px-4 py-2 text-base font-normal border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors duration-150 focus:outline-none'
             }
             onClick={() => onChange(tab.value)}
-            aria-selected={value === tab.value}
             tabIndex={0}
           >
             {tab.label}

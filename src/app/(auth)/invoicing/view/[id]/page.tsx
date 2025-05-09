@@ -127,7 +127,6 @@ export default function InvoiceViewPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
   const [saving, setSaving] = useState(false);
@@ -228,12 +227,10 @@ export default function InvoiceViewPage() {
 
         if (invoiceError) {
           console.error('Error fetching invoice:', invoiceError);
-          setError('Failed to load invoice');
           return;
         }
 
         if (!invoiceData) {
-          setError('Invoice not found or you do not have permission to view it');
           return;
         }
 
@@ -241,7 +238,6 @@ export default function InvoiceViewPage() {
         setEditInvoice(invoiceData);
       } catch (err) {
         console.error('Error in loadInvoice:', err);
-        setError('An error occurred while loading the invoice');
       } finally {
         setLoading(false);
       }
@@ -271,13 +267,13 @@ export default function InvoiceViewPage() {
     );
   }
 
-  if (error || !invoice) {
+  if (!invoice) {
     return (
       <div className="flex-1 p-8 bg-gradient-to-br from-white via-sky-50 to-purple-50">
         <div className="max-w-5xl mx-auto">
           <Alert variant="destructive">
             <AlertDescription>
-              {error || "Invoice not found"}
+              Invoice not found
             </AlertDescription>
           </Alert>
         </div>
@@ -321,7 +317,7 @@ export default function InvoiceViewPage() {
       const updated = await res.json();
       setInvoice(updated.invoice);
       setEditInvoice(updated.invoice);
-    } catch (error) {
+    } catch {
       alert('Failed to save changes');
     } finally {
       setSaving(false);
@@ -461,7 +457,7 @@ export default function InvoiceViewPage() {
                               onChange={e => handleItemChange(idx, 'rate', Number(e.target.value))}
                             />
                           </td>
-                          <td className="text-right">${(item as any).total_amount?.toFixed(2) ?? (item.quantity * item.rate).toFixed(2)}</td>
+                          <td className="text-right">${(item as unknown as { total_amount?: number })?.total_amount?.toFixed(2) ?? (item.quantity * item.rate).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -488,7 +484,7 @@ export default function InvoiceViewPage() {
                           </td>
                           <td className="text-center py-4">{item.quantity}</td>
                           <td className="text-right py-4">${item.rate.toFixed(2)}</td>
-                          <td className="text-right py-4">${(item as any).total_amount?.toFixed(2) ?? (item.quantity * item.rate).toFixed(2)}</td>
+                          <td className="text-right py-4">${(item as unknown as { total_amount?: number })?.total_amount?.toFixed(2) ?? (item.quantity * item.rate).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -504,11 +500,11 @@ export default function InvoiceViewPage() {
                     <tbody>
                       <tr>
                         <td className="text-gray-500 py-1">Subtotal</td>
-                        <td className="text-right font-medium py-1">${(invoice as any).subtotal?.toFixed(2) ?? subtotal.toFixed(2)}</td>
+                        <td className="text-right font-medium py-1">${(invoice as unknown as { subtotal?: number })?.subtotal?.toFixed(2) ?? subtotal.toFixed(2)}</td>
                       </tr>
                       <tr>
                         <td className="text-gray-500 py-1">Tax</td>
-                        <td className="text-right font-medium py-1">${(invoice as any).tax_amount?.toFixed(2) ?? '0.00'}</td>
+                        <td className="text-right font-medium py-1">${(invoice as unknown as { tax_amount?: number })?.tax_amount?.toFixed(2) ?? '0.00'}</td>
                       </tr>
                       {/* Separator above Invoice Total */}
                       <tr>
@@ -546,10 +542,6 @@ export default function InvoiceViewPage() {
                   <PaymentHistoryCard
                     payments={invoice.payments}
                     balance={balance}
-                    onRecordPayment={() => {
-                      // TODO: Implement payment recording
-                      console.log('Record payment');
-                    }}
                   />
                 </div>
               </div>

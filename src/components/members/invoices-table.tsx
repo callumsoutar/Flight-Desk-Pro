@@ -10,10 +10,19 @@ interface InvoicesTableProps {
   memberId: string;
 }
 
+interface InvoiceRow {
+  id: string;
+  invoice_number?: string;
+  status: string;
+  created_at?: string;
+  due_date?: string;
+  total_amount?: number;
+}
+
 export function InvoicesTable({ memberId }: InvoicesTableProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<unknown[]>([]);
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -28,7 +37,7 @@ export function InvoicesTable({ memberId }: InvoicesTableProps) {
           .order("created_at", { ascending: false });
         if (error) throw error;
         setInvoices(data || []);
-      } catch (err) {
+      } catch {
         setError("Failed to load invoices");
       } finally {
         setLoading(false);
@@ -36,14 +45,6 @@ export function InvoicesTable({ memberId }: InvoicesTableProps) {
     };
     if (memberId) fetchInvoices();
   }, [memberId]);
-
-  const handleDownload = async (invoiceId: string) => {
-    try {
-      // ...
-    } catch {
-      // ...
-    }
-  };
 
   if (loading) {
     return <div className="mt-8"><Skeleton className="h-32 w-full" /></div>;
@@ -73,32 +74,35 @@ export function InvoicesTable({ memberId }: InvoicesTableProps) {
               </TableCell>
             </TableRow>
           ) : (
-            invoices.map((inv) => (
-              <TableRow key={inv.id}>
-                <TableCell className="font-mono">{inv.invoice_number || inv.id.slice(0, 8)}</TableCell>
-                <TableCell>
-                  <Badge variant={
-                    inv.status === "paid"
-                      ? "default"
-                      : inv.status === "overdue"
-                      ? "destructive"
-                      : inv.status === "pending"
-                      ? "secondary"
-                      : "outline"
-                  }>
-                    {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
-                  </Badge>
-                </TableCell>
-                <TableCell>{inv.created_at ? new Date(inv.created_at).toLocaleDateString() : "-"}</TableCell>
-                <TableCell>{inv.due_date ? new Date(inv.due_date).toLocaleDateString() : "-"}</TableCell>
-                <TableCell className="text-right">${inv.total_amount?.toFixed(2) ?? "-"}</TableCell>
-                <TableCell>
-                  <Link href={`/invoicing/view/${inv.id}`}>
-                    <Button size="sm" variant="outline">View</Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))
+            invoices.map((_inv) => {
+              const inv = _inv as InvoiceRow;
+              return (
+                <TableRow key={inv.id}>
+                  <TableCell className="font-mono">{inv.invoice_number || inv.id.slice(0, 8)}</TableCell>
+                  <TableCell>
+                    <Badge variant={
+                      inv.status === "paid"
+                        ? "default"
+                        : inv.status === "overdue"
+                        ? "destructive"
+                        : inv.status === "pending"
+                        ? "secondary"
+                        : "outline"
+                    }>
+                      {inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{inv.created_at ? new Date(inv.created_at).toLocaleDateString() : "-"}</TableCell>
+                  <TableCell>{inv.due_date ? new Date(inv.due_date).toLocaleDateString() : "-"}</TableCell>
+                  <TableCell className="text-right">${inv.total_amount?.toFixed(2) ?? "-"}</TableCell>
+                  <TableCell>
+                    <Link href={`/invoicing/view/${inv.id}`}>
+                      <Button size="sm" variant="outline">View</Button>
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>

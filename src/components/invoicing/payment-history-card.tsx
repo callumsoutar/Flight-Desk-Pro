@@ -31,10 +31,9 @@ interface Payment {
 interface PaymentHistoryCardProps {
   payments: Payment[];
   balance: number;
-  onRecordPayment?: () => void;
   className?: string;
   availableCredit?: number;
-  onSubmitPayment?: (data: any) => Promise<void>;
+  onSubmitPayment?: (data: unknown) => Promise<void>;
 }
 
 const paymentSchema = z.object({
@@ -48,7 +47,6 @@ const paymentSchema = z.object({
 export function PaymentHistoryCard({ 
   payments, 
   balance, 
-  onRecordPayment,
   className,
   availableCredit = 0,
   onSubmitPayment,
@@ -79,7 +77,7 @@ export function PaymentHistoryCard({
         notes: "",
       });
     }
-  }, [open, balance]);
+  }, [open, balance, form]);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -87,7 +85,7 @@ export function PaymentHistoryCard({
   const queryClient = useQueryClient();
   const [formError, setFormError] = useState<string | null>(null);
   const mutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: { invoiceId?: string; amount: number; payment_method: string; payment_reference?: string; date: string; notes?: string }) => {
       setFormError(null);
       const res = await fetch(`/api/invoices/${data.invoiceId}/payments`, {
         method: "POST",
@@ -105,8 +103,12 @@ export function PaymentHistoryCard({
       handleClose();
       form.reset();
     },
-    onError: (err: any) => {
-      setFormError(err?.error || "Failed to record payment");
+    onError: (err: unknown) => {
+      if (typeof err === 'object' && err && 'error' in err) {
+        setFormError((err as { error?: string }).error || "Failed to record payment");
+      } else {
+        setFormError("Failed to record payment");
+      }
     },
   });
 
@@ -228,9 +230,9 @@ export function PaymentHistoryCard({
                   <label className="block text-xs text-gray-500 mb-1">Notes (Optional)</label>
                   <Textarea {...register("notes")} rows={2} disabled={mutation.isLoading} />
                 </div>
-                {(formError || mutation.error) && (
-                  <div className="text-sm text-red-500 mb-2">{formError || (mutation.error as any)?.error}</div>
-                )}
+                {(formError || mutation.error) ? (
+                  <div className="text-sm text-red-500 mb-2">{formError ? String(formError) : (typeof mutation.error === 'object' && mutation.error && 'error' in mutation.error ? String((mutation.error as { error?: string }).error) : (mutation.error ? String(mutation.error) : ''))}</div>
+                ) : null}
               </div>
               <DialogFooter className="flex flex-row gap-2 justify-end sticky bottom-0 bg-white p-3 border-t z-10">
                 <DialogClose asChild>
@@ -245,7 +247,12 @@ export function PaymentHistoryCard({
               <form
                 id="payment-form"
                 onSubmit={form.handleSubmit((data) => {
-                  mutation.mutate({ ...data, invoiceId: balance > 0 ? (onSubmitPayment ? undefined : (typeof window !== 'undefined' && window.location.pathname.split('/').pop())) : undefined });
+                  let invoiceId: string | undefined = undefined;
+                  if (balance > 0 && !onSubmitPayment && typeof window !== 'undefined') {
+                    const id = window.location.pathname.split('/').pop();
+                    invoiceId = typeof id === 'string' ? id : undefined;
+                  }
+                  mutation.mutate({ ...data, invoiceId });
                 })}
                 className="hidden"
               />

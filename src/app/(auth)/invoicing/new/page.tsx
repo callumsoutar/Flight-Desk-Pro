@@ -178,7 +178,7 @@ export default function CreateInvoicePage() {
       } else {
         alert(data.error || "Failed to create invoice");
       }
-    } catch (err) {
+    } catch {
       alert("Network error");
     }
   };

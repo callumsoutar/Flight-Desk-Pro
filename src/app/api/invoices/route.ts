@@ -157,7 +157,7 @@ export async function PATCH(req: NextRequest) {
         .eq("id", item.id);
     }
     // Recalculate total
-    total_amount = body.items.reduce((sum: number, item: any) => sum + item.quantity * item.rate, 0);
+    total_amount = body.items.reduce((sum: number, item: { quantity: number; rate: number }) => sum + item.quantity * item.rate, 0);
   }
   const { error: updateError } = await supabase
     .from("invoices")

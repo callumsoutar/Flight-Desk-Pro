@@ -1,6 +1,4 @@
 'use client';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Booking } from '@/types/bookings';
 import { format } from 'date-fns';
 import { CalendarDays, Plane, FileText, StickyNote, BookOpen, Users, Map, CheckCircle2, LogOut } from 'lucide-react';
@@ -220,11 +218,14 @@ export function CheckOutDetailsCard({ booking, editMode }: { booking: Booking; e
       toast.success('Check out details updated');
       setLoading(false);
       router.refresh();
-    } catch (e: any) {
+    } catch (e: unknown) {
       // Debug log: catch block error
       console.error('CheckOutDetailsCard handleSave catch error:', e);
-      setError((e && e.message) ? e.message : JSON.stringify(e));
-      toast.error((e && e.message) ? e.message : 'Unknown error');
+      const message = typeof e === 'object' && e && 'message' in e && typeof (e as { message?: string }).message === 'string'
+        ? (e as { message: string }).message
+        : JSON.stringify(e);
+      setError(message);
+      toast.error(message || 'Unknown error');
       setLoading(false);
     }
   };
@@ -292,29 +293,13 @@ export function CheckOutDetailsCard({ booking, editMode }: { booking: Booking; e
       toast.success('Booking checked out!');
       setCheckOutLoading(false);
       router.refresh();
-    } catch (e: any) {
-      setError(e.message || 'Unknown error');
-      toast.error(e.message || 'Unknown error');
+    } catch (e: unknown) {
+      const message = typeof e === 'object' && e && 'message' in e && typeof (e as { message?: string }).message === 'string'
+        ? (e as { message: string }).message
+        : JSON.stringify(e);
+      setError(message || 'Unknown error');
+      toast.error(message || 'Unknown error');
       setCheckOutLoading(false);
-    }
-  };
-
-  // Intercept in-app navigation (router.push)
-  const guardedRouterPush = (url: string) => {
-    if (isDirty) {
-      setPendingNavigation(() => () => router.push(url));
-      setShowNavDialog(true);
-    } else {
-      router.push(url);
-    }
-  };
-
-  // Intercept link clicks inside this component
-  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-    if (isDirty) {
-      e.preventDefault();
-      setPendingNavigation(() => () => router.push(e.currentTarget.href));
-      setShowNavDialog(true);
     }
   };
 
