@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserRole, canAccessTab, TAB_ROLE_ACCESS } from "@/lib/permissions";
+import { UserRole, canAccessTab } from "@/lib/permissions";
 
 type UserProfile = {
   id: string;
