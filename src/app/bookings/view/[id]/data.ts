@@ -89,7 +89,7 @@ export async function getBookingById(id: string): Promise<Booking | null> {
     console.log('[DEBUG] Inside lesson_id block:', mapped.lesson_id);
     const { data: lessonData, error: lessonError } = await supabase
       .from('lessons')
-      .select('id, name, description, duration')
+      .select('id, name, description, organization_id')
       .eq('id', mapped.lesson_id)
       .single();
     if (lessonError) {

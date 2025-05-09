@@ -94,7 +94,7 @@ export async function getBookingById(id: string): Promise<BookingWithDetails | n
   if (booking && booking.lesson_id) {
     const { data: lessonData, error: lessonError } = await supabase
       .from('lessons')
-      .select('id, name, description, duration')
+      .select('id, name, description, organization_id')
       .eq('id', booking.lesson_id)
       .single<Record<string, unknown>>();
     if (lessonError) {
