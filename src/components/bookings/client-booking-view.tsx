@@ -137,6 +137,7 @@ export function ClientBookingCheckInView({ booking, title }: { booking: Booking,
             {tab === 'comments' && (
               <div className="w-full bg-white border border-slate-200 rounded-xl shadow-sm p-6 mt-2">
                 <div className="font-semibold text-lg mb-4">Instructor Comments</div>
+                {/* instructor_comment is now joined from instructor_comments table, not bookings */}
                 {booking.instructor_comment ? (
                   <div className="bg-slate-50 rounded-lg p-4">
                     {booking.instructor && (

@@ -2,6 +2,8 @@ import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User } from '@/types/bookings';
 import Link from 'next/link';
+import { MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 function getInitials(user: User) {
   if (!user) return '';
@@ -10,7 +12,14 @@ function getInitials(user: User) {
   return (first + last).toUpperCase();
 }
 
-export function PeopleCard({ member, instructor }: { member: User; instructor?: User | null }) {
+interface PeopleCardProps {
+  member: User;
+  instructor?: User | null;
+  onInstructorCommentsClick?: () => void;
+  commentsCount?: number;
+}
+
+export function PeopleCard({ member, instructor, onInstructorCommentsClick, commentsCount }: PeopleCardProps) {
   return (
     <Card className="p-6 w-full">
       <h2 className="text-2xl font-bold mb-6 text-slate-900 tracking-tight">People</h2>
@@ -68,6 +77,26 @@ export function PeopleCard({ member, instructor }: { member: User; instructor?: 
           </Link>
         )}
       </div>
+      {onInstructorCommentsClick && (
+        <>
+          <div className="border-t border-slate-200 my-4" />
+          <Button
+            variant="outline"
+            className="w-full flex items-center justify-center gap-2 cursor-pointer relative"
+            onClick={onInstructorCommentsClick}
+          >
+            <span className="relative inline-block">
+              <MessageCircle className="w-4 h-4" />
+              {commentsCount && commentsCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md border-2 border-white z-10">
+                  {commentsCount}
+                </span>
+              )}
+            </span>
+            View Instructor Comments
+          </Button>
+        </>
+      )}
     </Card>
   );
 } 

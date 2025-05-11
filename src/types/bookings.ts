@@ -83,6 +83,15 @@ export interface BookingDetails {
   actual_end?: string | null;
 }
 
+export interface InstructorComment {
+  id: string;
+  booking_id: string;
+  instructor_id: string;
+  comment: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Booking {
   id: string;
   organization_id: string;
@@ -111,6 +120,9 @@ export interface Booking {
   lesson?: Lesson;
   debriefs?: Debrief[];
   briefing_completed: boolean;
+  /**
+   * The latest instructor comment for this booking, joined from instructor_comments table.
+   */
   instructor_comment?: string | null;
   bookingDetails?: BookingDetails;
 } 

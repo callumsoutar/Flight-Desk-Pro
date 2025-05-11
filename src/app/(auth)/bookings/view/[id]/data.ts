@@ -16,7 +16,7 @@ export async function getBookingById(id: string): Promise<BookingWithDetails | n
   // 1. Fetch booking by id (no joins)
   const { data: booking, error: bookingError } = await supabase
     .from('bookings')
-    .select('id, organization_id, aircraft_id, user_id, instructor_id, start_time, end_time, status, purpose, remarks, hobbs_start, hobbs_end, tach_start, tach_end, created_at, updated_at, flight_type_id, lesson_id, booking_type, briefing_completed, instructor_comment')
+    .select('id, organization_id, aircraft_id, user_id, instructor_id, start_time, end_time, status, purpose, remarks, hobbs_start, hobbs_end, tach_start, tach_end, created_at, updated_at, flight_type_id, lesson_id, booking_type, briefing_completed')
     .eq('id', id)
     .single();
   if (bookingError) {
@@ -121,8 +121,24 @@ export async function getBookingById(id: string): Promise<BookingWithDetails | n
     bookingDetails = detailsData || undefined;
   }
 
+  // Fetch latest instructor comment for this booking
+  let instructor_comment: string | null = null;
+  if (booking && booking.id) {
+    const { data: commentData, error: commentError } = await supabase
+      .from('instructor_comments')
+      .select('comment')
+      .eq('booking_id', booking.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!commentError && commentData && commentData.comment) {
+      instructor_comment = commentData.comment;
+    }
+  }
+
   return { 
     ...booking, 
+    instructor_comment,
     aircraft: aircraft as Aircraft | undefined,
     member, 
     instructor, 
@@ -138,7 +154,7 @@ export async function getBookingByIdDetailed(id: string): Promise<Booking | null
   const { data, error } = await supabase
     .from('bookings')
     .select(`
-      id, organization_id, aircraft_id, user_id, instructor_id, start_time, end_time, status, purpose, remarks, hobbs_start, hobbs_end, tach_start, tach_end, created_at, updated_at, flight_type_id, lesson_id, booking_type, briefing_completed, instructor_comment
+      id, organization_id, aircraft_id, user_id, instructor_id, start_time, end_time, status, purpose, remarks, hobbs_start, hobbs_end, tach_start, tach_end, created_at, updated_at, flight_type_id, lesson_id, booking_type, briefing_completed
     `)
     .eq('id', id)
     .single();
@@ -156,6 +172,20 @@ export async function getBookingByIdDetailed(id: string): Promise<Booking | null
 
   // Map fields to expected keys
   const d = data as Record<string, unknown>;
+  // Fetch latest instructor comment for this booking
+  let instructor_comment: string | null = null;
+  if (d['id']) {
+    const { data: commentData, error: commentError } = await supabase
+      .from('instructor_comments')
+      .select('comment')
+      .eq('booking_id', d['id'] as string)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!commentError && commentData && commentData.comment) {
+      instructor_comment = commentData.comment;
+    }
+  }
   const mapped = {
     id: d['id'] as string,
     organization_id: d['organization_id'] as string,
@@ -177,7 +207,7 @@ export async function getBookingByIdDetailed(id: string): Promise<Booking | null
     lesson_id: d['lesson_id'] as string | null,
     booking_type: d['booking_type'] as import('@/types/bookings').BookingType,
     briefing_completed: d['briefing_completed'] as boolean,
-    instructor_comment: d['instructor_comment'] as string | null,
+    instructor_comment,
     aircraft: undefined,
     flight_type: undefined,
     lesson: undefined,
